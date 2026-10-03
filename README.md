@@ -1,49 +1,54 @@
-# Class Wall — شاشة الفصل التفاعلية
+# Class Wall: Live Classroom Response Board
 
-الطلاب بيعملوا Scan للـ QR من موبايلاتهم، ويكتبوا إجاباتهم، فتظهر على البروجيكتور في نفس اللحظة.
-التطبيق كله مكتوب بـ PHP و MySQL، وبيستخدم كل اللي اتشرح في Unit 19.
+Students scan a QR code on the projector, type an answer on their phones, and it appears on the big screen live. I built it with plain PHP and MySQL to use in my own web programming classes.
 
-## التشغيل (5 دقايق)
+![Wall screen](screenshots/wall.png)
 
-1. انسخي فولدر `class-wall` كله جوه `C:\xampp\htdocs\`
-2. من XAMPP Control Panel شغّلي **Apache** و **MySQL**
-3. افتحي `http://localhost/class-wall/setup.php` **مرة واحدة بس**. هيعمل الداتابيز والجداول لوحده
-4. افتحي `http://localhost/class-wall/wall.php` على البروجيكتور، ودوسي ⛶ عشان تبقى Full screen
-5. الطلاب يعملوا Scan للـ QR اللي على الشاشة
+## Features
 
-صفحة التحكم: `http://localhost/class-wall/admin.php` (الرقم السري الافتراضي `1234`، غيّريه من `config.php`).
-منها تقدري تغيّري السؤال، وتمسحي إجابة، أو تمسحي الشاشة كلها.
+- **QR join.** The wall shows a QR code with the student page URL, generated automatically from the machine's local IP address.
+- **Live updates.** The wall polls a JSON API every 2 seconds with `fetch`. New answers pop in and deleted ones fade out, with no page reload.
+- **Student page.** A mobile-first form with server-side validation and a live character counter. It remembers the student's name in a cookie.
+- **Admin panel.** It is protected by a PIN and a session. From it the teacher can change the question (or pick a preset), delete single answers, or clear the board.
+- **Bilingual.** Arabic and English text with automatic direction (`dir="auto"`). The fonts are stored locally, so the app works offline on a classroom LAN.
 
-## لازم تجرّبي من موبايلك قبل الحصة
+## Security
 
-- **الموبايلات لازم تكون على نفس الـ Wi-Fi اللي عليه جهازك.**
-- **لو الموبايل مش بيفتح الصفحة،** فالسبب غالباً Windows Firewall. افتحي
-  *Windows Security ← Firewall ← Allow an app through firewall* وعلّمي على **Apache HTTP Server** في خانة Private.
-  واتأكدي إن شبكة الـ Wi-Fi متسجلة على الجهاز **Private** مش Public.
-- **لو الـ QR طالع بعنوان غلط،** أو على الشاشة مكتوب تحذير أحمر:
-  افتحي `cmd` واكتبي `ipconfig`، وخدي الرقم اللي جنب **IPv4 Address** (زي `192.168.1.15`).
-  وبعدين اكتبيه في `config.php`:
-  `define('PUBLIC_URL', 'http://192.168.1.15/class-wall/');`
-- **لو Wi-Fi المدرسة بيمنع الأجهزة تشوف بعض،** اعملي Hotspot من موبايلك، ووصّلي عليه اللابتوب والطلاب.
-- **من غير موبايلات خالص؟** الطلاب يفتحوا نفس العنوان من أجهزة المعمل.
+- **SQL injection:** every query that takes user input uses a **prepared statement** (`mysqli_prepare` + `bind_param`).
+- **XSS:** all output goes through `htmlspecialchars`, and the wall renders answers with `textContent`.
+- **Validation:** it happens on the server; the client-side checks are only for convenience.
+- **Repeated submits:** forms use the Post/Redirect/Get pattern, so refreshing the page doesn't resubmit.
 
-## خريطة الكود ← الدروس
+## Tech Stack
 
-| الملف | بيعمل إيه | الدروس اللي فيه |
-| --- | --- | --- |
-| `config.php` | الإعدادات (constants) | 1: Constants |
-| `db.php` | الاتصال بالداتابيز + functions مساعدة | 3: Functions · 4: require_once و htmlspecialchars · 5: mysqli_connect |
-| `setup.php` | بيعمل الداتابيز والجداول | 3: Arrays · 2: foreach · 5: CREATE TABLE |
-| `index.php` | صفحة الطالب (الفورم) | 4: POST و GET و Validation · 5: INSERT بـ prepared statement |
-| `api.php` | بيرجّع الإجابات JSON للشاشة | 5: SELECT · 2: while · 3: arrays |
-| `wall.php` | الشاشة اللي على البروجيكتور | PHP + JavaScript بيسأل api.php كل ثانيتين |
-| `admin.php` | صفحة التحكم | 2: switch...case · 5: UPDATE و DELETE · Sessions |
+PHP · MySQL · JavaScript (Fetch API) · HTML5 · CSS3
 
-كل سطر مهم في الكود عليه تعليق `📘 الدرس X` بيقول هو تبع أنهي درس.
+| File | Role |
+| --- | --- |
+| `config.php` | Settings (DB credentials, class name, admin PIN) |
+| `db.php` | DB connection and helper functions |
+| `setup.php` | Creates the database and tables (run it once) |
+| `index.php` | Student answer form (INSERT) |
+| `api.php` | JSON endpoint the wall polls (SELECT) |
+| `wall.php` | Projector screen |
+| `admin.php` | Teacher control panel (UPDATE / DELETE) |
 
-## أفكار للحصة
+## Run Locally (XAMPP)
 
-- **أول الحصة:** «Describe PHP in one word»، وكده الكل يشارك في أول دقيقة.
-- **آخر الحصة:** «What is still confusing?»، وده سؤال خروج جاهز يتعرض قدامك على طول.
-- **تحدّي للطلاب الشاطرين:** يفتحوا `index.php` ويحاولوا يبعتوا `<script>`. هيلاقوه اتعرض كنص عادي، واسأليهم ليه.
-- **مشروع للكارت الأحمر:** يضيفوا زرار Like لكل إجابة، يعني عمود `likes` و UPDATE.
+1. Copy the folder into `C:\xampp\htdocs\class-wall`.
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+3. Open `http://localhost/class-wall/setup.php` once.
+4. Open `http://localhost/class-wall/wall.php` on the projector.
+5. Students on the same Wi-Fi scan the QR code.
+
+The admin panel is at `/admin.php`. The default PIN is `1234`; change it in `config.php`.
+
+## Screenshots
+
+| Student page | Admin panel |
+| --- | --- |
+| ![Student](screenshots/student.png) | ![Admin](screenshots/admin.png) |
+
+---
+
+Built by **Eng. Sabah Gomaa**: [GitHub](https://github.com/Engsabah37) · [LinkedIn](https://linkedin.com/in/sabah-gomaa-90a8361b7)

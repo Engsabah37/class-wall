@@ -49,6 +49,10 @@ The admin panel is at `/admin.php`. The default PIN is `1234`; change it in `con
 | --- | --- |
 | ![Student](screenshots/student.png) | ![Admin](screenshots/admin.png) |
 
+## License
+
+[MIT](LICENSE)
+
 ---
 
 Built by **Eng. Sabah Gomaa**: [GitHub](https://github.com/Engsabah37) · [LinkedIn](https://linkedin.com/in/sabah-gomaa-90a8361b7)
